@@ -36,6 +36,7 @@ class AllowedCountry(models.Model):
     class Meta:
         verbose_name = 'Страна для разрешения'
         verbose_name_plural = 'Страны для разрешения'
+        # db_table = "content_content_allowed_countries"
 
 
 class ContentSubscription(models.Model):
@@ -54,10 +55,10 @@ class ContentSubscription(models.Model):
         return self.title_ru
 
     class Meta:
-        db_table = 'users_subscription'
         ordering = 'ordering',
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        db_table = "users_subscription"
 
 
 class CrowdVideo(models.Model):
@@ -83,6 +84,7 @@ class CrowdVideo(models.Model):
         ordering = "slug",
         verbose_name = "Все Видео"
         verbose_name_plural = "Все Видео"
+        db_table = "content_crowdvideo"
 
 
 class CrowdAudio(models.Model):
@@ -95,6 +97,7 @@ class CrowdAudio(models.Model):
         ordering = "slug",
         verbose_name = 'Все Аудио'
         verbose_name_plural = 'Все Аудио'
+        db_table = "content_crowdaudio"
 
 
 class Genre(models.Model):
@@ -128,6 +131,7 @@ class Genre(models.Model):
         ordering = ['ordering']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+        db_table = "content_genre"
 
 
 class Sponsor(models.Model):
@@ -147,6 +151,7 @@ class Sponsor(models.Model):
         ordering = ['ordering']
         verbose_name = 'Спонсор'
         verbose_name_plural = 'Спонсоры'
+        db_table = "content_sponsor"
 
 
 class Country(models.Model):
@@ -167,6 +172,7 @@ class Country(models.Model):
         ordering = ['ordering']
         verbose_name = "Страна"
         verbose_name_plural = "Страны"
+        db_table = "content_country"
 
 
 class Category(models.Model):
@@ -199,6 +205,7 @@ class Category(models.Model):
         ordering = ['ordering']
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+        db_table = "content_category"
 
 
 class Person(models.Model):
@@ -232,6 +239,7 @@ class Person(models.Model):
         ordering = ['ordering']
         verbose_name = "Участник"
         verbose_name_plural = "Участники"
+        db_table = "content_person"
 
 
 class Content(models.Model):
@@ -254,20 +262,27 @@ class Content(models.Model):
                                                         default='0+', choices=AGE_RESTRICTIONS, )
     date_created = models.DateTimeField('Дата создания', auto_now_add=True)
 
-    sponsors = models.ManyToManyField(Sponsor, verbose_name="Спонсоры", related_name='sponsors',
-                                      through="ContentSponsor", blank=True)
-    country = models.ManyToManyField(Country, verbose_name="Страна", related_name='country', through="ContentCountry",
-                                     blank=True)
-    actors = models.ManyToManyField(Person, verbose_name="В ролях", related_name='actors', through="ContentActor",
-                                    blank=True)
-    scenario = models.ManyToManyField(Person, verbose_name="Сценарист", related_name='scenario',
-                                      through="ContentScenario", blank=True)
-    producer = models.ManyToManyField(Person, verbose_name="Продюсер", related_name='producer',
-                                      through="ContentProducer", blank=True)
-    director = models.ManyToManyField(Person, verbose_name="Режиссер", related_name='director',
-                                      through="ContentDirector", blank=True)
-    genres = models.ManyToManyField(Genre, verbose_name="Жанры", related_name='genres', through="ContentGenre",
-                                    blank=True)
+    sponsors = models.ManyToManyField(
+        Sponsor, verbose_name="Спонсоры", related_name='sponsors', through="ContentSponsor", blank=True
+    )
+    country = models.ManyToManyField(
+        Country, verbose_name="Страна", related_name='country', through="ContentCountry", blank=True
+    )
+    # actors = models.ManyToManyField(
+    #     Person, verbose_name="В ролях", related_name='actors', through="ContentActor", blank=True
+    # )
+    # scenario = models.ManyToManyField(
+    #     Person, verbose_name="Сценарист", related_name='scenario', through="ContentScenario", blank=True
+    # )
+    # producer = models.ManyToManyField(
+    #     Person, verbose_name="Продюсер", related_name='producer', through="ContentProducer", blank=True
+    # )
+    # director = models.ManyToManyField(
+    #     Person, verbose_name="Режиссер", related_name='director', through="ContentDirector", blank=True
+    # )
+    genres = models.ManyToManyField(
+        Genre, verbose_name="Жанры", related_name='genres', through="ContentGenre", blank=True
+    )
     category = models.ForeignKey(Category, related_name='contents', on_delete=models.SET_NULL, null=True, )
 
     logo_image_square = StdImageField('Лого медиа квадрат',
@@ -325,53 +340,53 @@ class Content(models.Model):
     draft = models.BooleanField("Черновик", default=True)
 
     is_serial = models.BooleanField("Это сериал? ", choices=IS_SERIAL_CHOICES, )
-    allowed_countries = models.ManyToManyField(AllowedCountry, verbose_name='Разрешенные страны', blank=True)
-    allowed_subscriptions = models.ManyToManyField(ContentSubscription, verbose_name='Разрешенные подписки',
-                                                   blank=False)
-
-    # ordering = models.PositiveIntegerField("Позиция в списке", default=100)
+    allowed_countries = models.ManyToManyField(
+        "AllowedCountry", verbose_name='Разрешенные страны', blank=True
+    )
+    allowed_subscriptions = models.ManyToManyField(
+        "ContentSubscription", verbose_name='Разрешенные подписки', blank=False
+    )
 
     def __str__(self):
         for iso in lang:
             if getattr(self, f"title_{iso}", None):
-                return f'{self.id} - {getattr(self, f"title_{iso}", None)}'
-        return self.id
+                return f'{self.pk} - {getattr(self, f"title_{iso}", None)}'
+        return self.pk
 
     class Meta:
-        # ordering = ['-id']
         verbose_name = "Контент"
         verbose_name_plural = "!Контент 0 Full"
-        db_table = "search_content"
+        db_table = "content_content"
 
 
 class ContentSponsor(models.Model):
-    content = models.ForeignKey(Content, related_name='content_sponsors', on_delete=models.CASCADE)
+    content = models.ForeignKey("Content", related_name='content_sponsors', on_delete=models.CASCADE)
     sponsor = models.ForeignKey(Sponsor, on_delete=models.CASCADE)
     ordering = models.PositiveSmallIntegerField(default=10)
 
     class Meta:
         ordering = 'ordering',
-        db_table = "content_content_sponsors"
         unique_together = ['content', 'sponsor']
+        # db_table = "content_content_sponsors"
 
 
 class ContentGenre(models.Model):
-    content = models.ForeignKey(Content, related_name='content_genres', on_delete=models.CASCADE)
+    content = models.ForeignKey("Content", related_name='content_genres', on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     ordering = models.PositiveSmallIntegerField(default=10)
 
     class Meta:
         ordering = 'ordering',
-        db_table = "content_content_genres"
         unique_together = ['content', 'genre']
+        # db_table = "content_content_genres"
 
 
 class ContentCountry(models.Model):
-    content = models.ForeignKey(Content, related_name='content_countries', on_delete=models.CASCADE)
+    content = models.ForeignKey("Content", related_name='content_countries', on_delete=models.CASCADE)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     ordering = models.PositiveSmallIntegerField(default=10)
 
     class Meta:
         ordering = 'ordering',
-        db_table = "content_content_country"
         unique_together = ['content', 'country']
+        # db_table = "content_content_country"
