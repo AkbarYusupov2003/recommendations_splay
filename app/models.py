@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from pytils.translit import slugify
 
 from django.core.files.images import get_image_dimensions
-from content.etc.country_choices import COUNTRY_CHOICES
+from app.etc.country_choices import COUNTRY_CHOICES
 from stdimage import StdImageField
 
 
@@ -366,8 +366,7 @@ class ContentSponsor(models.Model):
 
     class Meta:
         ordering = 'ordering',
-        unique_together = ['content', 'sponsor']
-        # db_table = "content_content_sponsors"
+        db_table = "content_content_sponsors"
 
 
 class ContentGenre(models.Model):
@@ -377,8 +376,7 @@ class ContentGenre(models.Model):
 
     class Meta:
         ordering = 'ordering',
-        unique_together = ['content', 'genre']
-        # db_table = "content_content_genres"
+        db_table = "content_content_genres"
 
 
 class ContentCountry(models.Model):
@@ -388,5 +386,4 @@ class ContentCountry(models.Model):
 
     class Meta:
         ordering = 'ordering',
-        unique_together = ['content', 'country']
-        # db_table = "content_content_country"
+        db_table = "content_content_country"
