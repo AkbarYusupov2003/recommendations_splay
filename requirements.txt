@@ -1,0 +1,9 @@
+Django==4.2.8
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-debug-toolbar==4.2.0
+psycopg2-binary==2.9.9
+
+
+django-stdimage==6.0.2
+pytils==0.4.1
