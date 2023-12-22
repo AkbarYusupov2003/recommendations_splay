@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app import models
+from content import models
 
 
 admin.site.register(models.AllowedCountry)

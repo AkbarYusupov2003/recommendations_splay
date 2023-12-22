@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from pytils.translit import slugify
 
 from django.core.files.images import get_image_dimensions
-from app.etc.country_choices import COUNTRY_CHOICES
+from content.etc.country_choices import COUNTRY_CHOICES
 from stdimage import StdImageField
 
 
