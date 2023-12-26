@@ -43,8 +43,8 @@ class ContentDocument(Document):
             "country_name": fields.TextField(),
         }
     )
-    # -------------------------------------------------------------------------------------------
     year = fields.IntegerField(attr="year")
+    # -------------------------------------------------------------------------------------------
     category = fields.ObjectField(
         attr="category",
         properties={
@@ -98,6 +98,9 @@ class ContentDocument(Document):
                 allowed_countries.append({
                     "country_code": country.country_code, "country_name": country.country_name
                 })
+            obj["allowed_countries"] = allowed_countries
+
+
             genres = []
             sponsors = []
             countries = []
@@ -105,15 +108,13 @@ class ContentDocument(Document):
                 genres.append({"id": genre.pk})
             for sponsor in content.sponsors.all():
                 sponsors.append({"id": sponsor.pk})
-            for country in countries:
+            for country in content.country.all():
                 countries.append({"id": country.pk})
-
-            obj["allowed_countries"] = allowed_countries
             obj["genres"] = genres
+            obj["sponsors"] = sponsors
             obj["country"] = countries
 
             obj["category"] = {"id": content.category.pk}
-
             obj["pk"] = content.pk
             obj["title_uz"] = utils.remove_quotes(obj["title_uz"])
             obj["title_ru"] = utils.remove_quotes(obj["title_ru"])
