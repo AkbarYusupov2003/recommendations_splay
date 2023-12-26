@@ -100,18 +100,19 @@ class ContentDocument(Document):
                 })
             obj["allowed_countries"] = allowed_countries
 
-
             genres = []
-            sponsors = []
-            countries = []
             for genre in content.genres.all():
                 genres.append({"id": genre.pk})
+            obj["genres"] = genres
+
+            sponsors = []
             for sponsor in content.sponsors.all():
                 sponsors.append({"id": sponsor.pk})
+            obj["sponsors"] = sponsors
+
+            countries = []
             for country in content.country.all():
                 countries.append({"id": country.pk})
-            obj["genres"] = genres
-            obj["sponsors"] = sponsors
             obj["country"] = countries
 
             obj["category"] = {"id": content.category.pk}
