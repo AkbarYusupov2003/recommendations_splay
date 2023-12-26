@@ -2,7 +2,7 @@ from content import models
 from content.api.serializers import base
 
 
-class ContentWebListSerializer(base.NameISOSerializer):
+class RecommendationsForDetailSerializer(base.NameISOSerializer):
     poster_h = base.StdImageSerializer()
 
     class Meta:

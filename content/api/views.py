@@ -33,6 +33,15 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         print("\n")
         return []
 
+    def get(self, request, *args, **kwargs):
+        if self.request.LANGUAGE_CODE == "uz" or self.request.LANGUAGE_CODE == "ru":
+            queryset = self.get_queryset()
+            results = self.paginate_queryset(queryset)
+            res = self.get_serializer(results, many=True)
+            return self.get_paginated_response(res.data)
+
+        return response.Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 def tester():
     contents = models.Content.objects.all()
