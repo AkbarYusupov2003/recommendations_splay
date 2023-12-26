@@ -2,15 +2,16 @@ from content import models
 from content.api.serializers import base
 from rest_framework import serializers
 
-class RecommendationsForDetailSerializer(serializers.ModelSerializer):
+
+class RecommendationsForDetailSerializer(base.NameISOSerializer):
     poster_h = base.StdImageSerializer()
 
     class Meta:
         model = models.Content
-        # i18n_fields: dict = {
-        #     "catch": list(),
-        #     "exact": list("title"),
-        # }
+        i18n_fields: dict = {
+            "catch": list(),
+            "exact": ("title",),
+        }
         fields = (
             "id",
             "is_serial",
