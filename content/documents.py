@@ -49,16 +49,16 @@ class ContentDocument(Document):
         attr="category",
         properties={
             "id": fields.IntegerField(),
-            "name_uz": fields.TextField(),
-            "name_ru": fields.TextField(),
+            # "name_uz": fields.TextField(),
+            # "name_ru": fields.TextField(),
         }
     )
     country = fields.ObjectField(
         attr="country",
         properties={
             "id": fields.IntegerField(),
-            "name_uz": fields.TextField(),
-            "name_ru": fields.TextField(),
+            # "name_uz": fields.TextField(),
+            # "name_ru": fields.TextField(),
         },
         multi=True
     )
@@ -66,10 +66,10 @@ class ContentDocument(Document):
         attr="genres",
         properties={
             "id": fields.IntegerField(),
-            "name_uz": fields.TextField(),
-            "name_ru": fields.TextField(),
-            "slug": fields.TextField(),
-            "ordering": fields.IntegerField()
+            # "name_uz": fields.TextField(),
+            # "name_ru": fields.TextField(),
+            # "slug": fields.TextField(),
+            # "ordering": fields.IntegerField()
         },
         multi=True
     )
@@ -77,7 +77,7 @@ class ContentDocument(Document):
         attr="sponsors",
         properties={
             "id": fields.IntegerField(),
-            "name": fields.TextField(),
+            # "name": fields.TextField(),
         },
         multi=True
     )
@@ -93,13 +93,27 @@ class ContentDocument(Document):
         res = []
         for content in qs:
             obj = content.__dict__
-            allowed = []
-            allowed_countries = content.allowed_countries.all()
-            for country in allowed_countries:
-                allowed.append({
+            allowed_countries = []
+            for country in content.allowed_countries.all():
+                allowed_countries.append({
                     "country_code": country.country_code, "country_name": country.country_name
                 })
-            obj["allowed_countries"] = allowed
+            genres = []
+            sponsors = []
+            countries = []
+            for genre in content.genres.all():
+                genres.append({"id": genre.pk})
+            for sponsor in content.sponsors.all():
+                sponsors.append({"id": sponsor.pk})
+            for country in countries:
+                countries.append({"id": country.pk})
+
+            obj["allowed_countries"] = allowed_countries
+            obj["genres"] = genres
+            obj["country"] = countries
+
+            obj["category"] = {"id": content.category.pk}
+
             obj["pk"] = content.pk
             obj["title_uz"] = utils.remove_quotes(obj["title_uz"])
             obj["title_ru"] = utils.remove_quotes(obj["title_ru"])

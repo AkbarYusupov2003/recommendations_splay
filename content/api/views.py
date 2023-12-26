@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, filters, pagination, status, response
 from rest_framework.views import APIView
+from elasticsearch_dsl import Q
 
 from content import models
 from content import documents
@@ -17,20 +18,25 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         # TODO from jwt get age, allowed_countries
         lang = self.request.LANGUAGE_CODE
 
-        age_restrictions = 18  # self.request.auth.payload.get("age", 18)
-        country_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
+        age = 18  # self.request.auth.payload.get("age", 18)
+        c_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
 
         content = get_object_or_404(
             models.Content,
             pk=self.kwargs["content_id"]
         )
-        allowed_contents = models.Content.objects.all()
+        document = self.document.search().filter("match", allowed_countries__country_code=c_code).extra(size=100)
+        #document = document.filter({"range": {"age_restrictions": {"lte": age}}}).extra(size=100)
+        print("d", document.count())
+        res = []
+        sponsors_ids = list(content.sponsors.all().values_list("pk", flat=True))
+        doc_res = document.query(
+            Q({"match": {"category.id": "2"}}) #sponsors_ids}})
+        )
+        print("count", doc_res.count())
+        for x in doc_res:
+            print("x", x)
 
-        print("\n")
-        print("title: ", content.title_ru)
-        print("sponsors: ", content.sponsors.all())
-        print("genres: ", content.genres.all())
-        print("\n")
         return models.Content.objects.all()
 
     def get(self, request, *args, **kwargs):
