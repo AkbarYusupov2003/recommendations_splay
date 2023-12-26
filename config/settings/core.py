@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third party apps
     "rest_framework",
-    "rest_framework_simplejwt",
+    "django_elasticsearch_dsl",
+    "django_elasticsearch_dsl_drf",
     # my apps
     "content"
 ]
