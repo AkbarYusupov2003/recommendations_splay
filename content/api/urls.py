@@ -5,5 +5,5 @@ from content.api import views
 app_name = "content"
 
 urlpatterns = [
-    path("<int:content_id>/", views.RecommendationsFromContentAPIView.as_view()),
+    path("<int:content_id>/", views.RecommendationsForDetailAPIView.as_view()),
 ]

@@ -1,16 +1,24 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, generics, filters
+from rest_framework import generics, filters, pagination, status, response
 from rest_framework.views import APIView
-from rest_framework.response import Response
 
 from content import models
+from content import documents
+from content.api import serializers
 
 
-class RecommendationsFromContentAPIView(APIView):
+class RecommendationsForDetailAPIView(generics.GenericAPIView):
+    document = documents.ContentDocument
+    serializer_class = serializers.RecommendationsForDetailSerializer
+    pagination_class = pagination.LimitOffsetPagination
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         # TODO Recommendations from: sponsors, title, genres
         # TODO from jwt get age, allowed_countries
+        lang = self.request.LANGUAGE_CODE
+
+        age_restrictions = 18  # self.request.auth.payload.get("age", 18)
+        country_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
 
         content = get_object_or_404(
             models.Content,
@@ -23,7 +31,7 @@ class RecommendationsFromContentAPIView(APIView):
         print("sponsors: ", content.sponsors.all())
         print("genres: ", content.genres.all())
         print("\n")
-        return Response({"message": "ok"}, status=200)
+        return []
 
 
 def tester():

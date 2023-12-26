@@ -1,4 +1,5 @@
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
 
 
 try:
@@ -7,12 +8,6 @@ except:
     raise ImportError("config/settings/local_settings.py file does not exists")
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-SECRET_KEY = "django-insecure-)cz0=j)x8%=&5+2iv1v4m#xd%+dae03azq8l463l7+)-+old64"
-
-DEBUG = True
-
-ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -85,6 +80,18 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LANGUAGES = (
+    ('ru', _('Russian')),
+    ('en', _('English')),
+    ('uz', _('Uzbek')),
+)
+
+LOCALES = {
+    "ru": "Russian",
+    "en": "English",
+    "uz": "Uzbek",
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
