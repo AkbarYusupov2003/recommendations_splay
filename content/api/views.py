@@ -31,7 +31,7 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         print("sponsors: ", content.sponsors.all())
         print("genres: ", content.genres.all())
         print("\n")
-        return []
+        return models.Content.objects.all()
 
     def get(self, request, *args, **kwargs):
         if self.request.LANGUAGE_CODE == "uz" or self.request.LANGUAGE_CODE == "ru":
