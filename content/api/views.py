@@ -25,17 +25,17 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
             models.Content,
             pk=self.kwargs["content_id"]
         )
-        document = self.document.search().filter("match", allowed_countries__country_code=c_code).extra(size=100)
+        document = self.document.search() #.filter("match", allowed_countries__country_code=c_code) #.extra(size=100)
         #document = document.filter({"range": {"age_restrictions": {"lte": age}}}).extra(size=100)
         print("d", document.count())
         res = []
         sponsors_ids = list(content.sponsors.all().values_list("pk", flat=True))
+        print(sponsors_ids)
         doc_res = document.query(
-            Q({"match": {"category.id": "2"}}) #sponsors_ids}})
+            Q({"match": {"sponsors.id": sponsors_ids[0]}})
+            # Q({"match": {"category.id": "2"}}) #sponsors_ids}})
         )
         print("count", doc_res.count())
-        for x in doc_res:
-            print("x", x)
 
         return models.Content.objects.all()
 
@@ -49,13 +49,22 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         return response.Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-def tester():
+# def tester():
+#     contents = models.Content.objects.all()
+#     counter = 0
+#     print(
+#         contents.get(pk=3555).title_ru, contents.get(pk=3555).sponsors.all()
+#     )
+#     for content in contents:
+#         if len(content.genres.all()) == 0:
+#             print(content.title_ru)
+#         counter += 1
+
+def test():
     contents = models.Content.objects.all()
-    counter = 0
-    print(
-        contents.get(pk=3555).title_ru, contents.get(pk=3555).sponsors.all()
-    )
+    max_sponsors = 0
     for content in contents:
-        if len(content.genres.all()) == 0:
-            print(content.title_ru)
-        counter += 1
+        c = content.genres.all().count()
+        if c > max_sponsors:
+            max_sponsors = c
+    print("MAX", max_sponsors)
