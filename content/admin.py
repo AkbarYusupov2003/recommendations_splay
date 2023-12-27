@@ -6,9 +6,9 @@ from content import models
 @admin.register(models.Content)
 class ContentAdmin(admin.ModelAdmin):
     list_display = (
-        "title_ru", "category", "get_genres", "get_sponsors", "get_country", "get_allowed_countries", "draft"
+        "title_ru", "category", "get_genres", "get_sponsors", "get_country", "get_allowed_countries", "slug", "is_serial","draft"
     )
-    list_filter = ("draft", )
+    list_filter = ("draft", "is_serial")
     search_fields = ("title_ru", "title_uz")
 
     def get_genres(self, object):

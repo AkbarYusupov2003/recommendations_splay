@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, filters, pagination, status, response
 from rest_framework.views import APIView
+from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Q
 
 from content import models
@@ -14,29 +16,38 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
     pagination_class = pagination.LimitOffsetPagination
 
     def get_queryset(self):
-        # TODO Recommendations from: sponsors, title, genres
-        # TODO from jwt get age, allowed_countries
-        lang = self.request.LANGUAGE_CODE
-
+        # TODO Recommendations from: sponsors, title, genres fields
         age = 18  # self.request.auth.payload.get("age", 18)
         c_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
 
-        content = get_object_or_404(
-            models.Content,
-            pk=self.kwargs["content_id"]
-        )
-        document = self.document.search() #.filter("match", allowed_countries__country_code=c_code) #.extra(size=100)
-        #document = document.filter({"range": {"age_restrictions": {"lte": age}}}).extra(size=100)
-        print("d", document.count())
-        res = []
+        content = get_object_or_404(models.Content, pk=self.kwargs["content_id"])
+        client = Elasticsearch(settings.ELASTICSEARCH_URL)
         sponsors_ids = list(content.sponsors.all().values_list("pk", flat=True))
-        print(sponsors_ids)
-        doc_res = document.query(
-            Q({"match": {"sponsors.id": sponsors_ids[0]}})
-            # Q({"match": {"category.id": "2"}}) #sponsors_ids}})
-        )
-        print("count", doc_res.count())
+        sponsors_query = "^1".join(str(x) for x in sponsors_ids)
+        document = self.document.search().filter("match", allowed_countries__country_code=c_code)
+        document = document.filter({"range": {"age_restrictions": {"lte": age}}})#.extra(size=100)
 
+        # response = document.query({
+        #     "query_string": {
+        #         f"query": f"sponsors.id:({sponsors_query})",
+        #         "rewrite": "scoring_boolean"
+        #     }
+        # })
+        response = client.search(
+            index="contents",
+            body={
+                "query": {
+                    "query_string": {
+                        f"query": f"sponsors.id:({sponsors_query})",
+                        "rewrite": "scoring_boolean"
+                    }
+                }
+            }
+        )
+        # for hit in response:
+        #     print(hit)
+
+        print("response", response["hits"]["hits"])
         return models.Content.objects.all()
 
     def get(self, request, *args, **kwargs):
