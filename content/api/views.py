@@ -23,7 +23,7 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         content = get_object_or_404(models.Content, pk=self.kwargs["content_id"])
         client = Elasticsearch(settings.ELASTICSEARCH_URL)
         sponsors_ids = list(content.sponsors.all().values_list("pk", flat=True))
-        sponsors_query = "^1".join(str(x) for x in sponsors_ids)
+        sponsors_query = "^1 ".join(str(x) for x in sponsors_ids)
         document = self.document.search().filter("match", allowed_countries__country_code=c_code)
         document = document.filter({"range": {"age_restrictions": {"lte": age}}})#.extra(size=100)
 
@@ -33,21 +33,25 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         #         "rewrite": "scoring_boolean"
         #     }
         # })
-        response = client.search(
+        print("Sponsors: ", sponsors_ids)
+        # Strict title check -> add from sponsors -> add from genres
+
+        res = client.search(
             index="contents",
             body={
                 "query": {
                     "query_string": {
                         f"query": f"sponsors.id:({sponsors_query})",
                         "rewrite": "scoring_boolean"
-                    }
+                    },
                 }
             }
         )
-        # for hit in response:
-        #     print(hit)
+        for hit in res['hits']['hits']:
+            score = hit["_score"]
+            source = hit["_source"]
+            print(score, f"{source['id']}.{source['title_ru']}", source["sponsors"])
 
-        print("response", response["hits"]["hits"])
         return models.Content.objects.all()
 
     def get(self, request, *args, **kwargs):
