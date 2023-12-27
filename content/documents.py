@@ -13,11 +13,7 @@ class ContentDocument(Document):
         fields={
             "multiple_words_ngram": fields.TextField(analyzer=analyzers.multiple_words_analyzer),
             "strict_edge": fields.TextField(analyzer=analyzers.strict_edge_ngram_analyzer),
-            "medium_edge": fields.TextField(analyzer=analyzers.medium_edge_ngram_analyzer),
-            "soft_edge": fields.TextField(analyzer=analyzers.soft_edge_ngram_analyzer),
-            "very_soft_edge": fields.TextField(analyzer=analyzers.very_soft_edge_ngram_analyzer),
             "strict_ngram": fields.TextField(analyzer=analyzers.strict_ngram_analyzer),
-            "medium_ngram": fields.TextField(analyzer=analyzers.medium_ngram_analyzer),
         }
     )
     title_uz = fields.TextField(
@@ -25,11 +21,7 @@ class ContentDocument(Document):
         fields={
             "multiple_words_ngram": fields.TextField(analyzer=analyzers.multiple_words_analyzer),
             "strict_edge": fields.TextField(analyzer=analyzers.strict_edge_ngram_analyzer),
-            "medium_edge": fields.TextField(analyzer=analyzers.medium_edge_ngram_analyzer),
-            "soft_edge": fields.TextField(analyzer=analyzers.soft_edge_ngram_analyzer),
-            "very_soft_edge": fields.TextField(analyzer=analyzers.very_soft_edge_ngram_analyzer),
             "strict_ngram": fields.TextField(analyzer=analyzers.strict_ngram_analyzer),
-            "medium_ngram": fields.TextField(analyzer=analyzers.medium_ngram_analyzer),
         }
     )
     # -------------------------------------------------------------------------------------------
