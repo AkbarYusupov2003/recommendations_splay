@@ -58,7 +58,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
                     "rewrite": "scoring_boolean"
                 }
             })
-
             for x in document:
                 if x not in result:
                     result.append(x.id)
