@@ -4,16 +4,6 @@ from content import models
 from content.api.serializers import base
 
 
-class CategoryListSerializer(base.NameISOSerializer):
-    class Meta:
-        model = models.Category
-        i18n_fields: dict = {
-            "catch": list(),
-            "exact": ("name",)
-        }
-        fields = "id", "icon",
-
-
 class ContentSponsorListSerializer(base.NameISOSerializer):
     id = serializers.IntegerField(source='sponsor.id')
     name = serializers.CharField(source="sponsor.name")
@@ -38,6 +28,7 @@ class ContentGenreListSerializer(serializers.ModelSerializer):
 # ---------------------------------------------------------------------------------------------
 class RecommendationsForDetailSerializer(base.NameISOSerializer):
     poster_h = base.StdImageSerializer()
+
     sponsors = serializers.SerializerMethodField()
     genres = serializers.SerializerMethodField()
 
@@ -49,7 +40,7 @@ class RecommendationsForDetailSerializer(base.NameISOSerializer):
         }
         fields = (
             "id",
-            "category",
+            "category_id",
             "sponsors",
             "genres",
             # "is_serial",

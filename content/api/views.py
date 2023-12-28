@@ -1,7 +1,6 @@
 from django.db.models import Case, Value, When, IntegerField
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, pagination, status, response
-from rest_framework.views import APIView
 from elasticsearch_dsl import Q as dsl_Q
 from elasticsearch_dsl.query import Bool
 
@@ -10,7 +9,7 @@ from content import documents
 from content.api import serializers
 
 
-class RecommendationsForDetailAPIView(generics.GenericAPIView):
+class DetailRecommendationsAPIView(generics.GenericAPIView):
     document = documents.ContentDocument
     serializer_class = serializers.RecommendationsForDetailSerializer
     pagination_class = pagination.LimitOffsetPagination
@@ -21,7 +20,7 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
 
         content = get_object_or_404(
             models.Content,
-            pk=self.kwargs["content_id"], #age_restrictions__lte=age, allowed_countries__in=(c_code, "ALL")
+            pk=self.kwargs["content_id"], age_restrictions__lte=age, allowed_countries__in=(c_code, "ALL")
         )
         base_document = self.document.search().filter(
             Bool(should=[
@@ -39,7 +38,7 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
                 dsl_Q({"match": {"id": content.pk}}),
                 dsl_Q({"range": {"age_restrictions": {"gt": age}}})
             ])
-        ) #.extra(size=100)
+        ).extra(size=100)
         # Filtering by title
         document = base_document.filter(
             dsl_Q({
@@ -51,7 +50,6 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
             result.append(x.id)
         result.sort(reverse=True)
         # Filtering by sponsors
-        print(len(result))
         if content.sponsors.exists():
             query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True)))
             document = base_document.query({
@@ -65,7 +63,6 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
                 if x not in result:
                     result.append(x.id)
         # Filtering by genres
-        print(len(result))
         if content.genres.exists():
             if len(result) < 30:
                 query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True)))
@@ -74,11 +71,10 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
                         "query": f"genres.id:({query})",
                         "rewrite": "scoring_boolean"
                     }
-                }).extra(size=30)
+                }) # .extra(size=30)
                 for x in document:
                     if x not in result:
                         result.append(x.id)
-        print(len(result))
         qs = models.Content.objects.filter(pk__in=result).order_by(
             Case(
                 *[When(pk=pk, then=Value(i)) for i, pk in enumerate(result)],
@@ -95,24 +91,3 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
             return self.get_paginated_response(res.data)
 
         return response.Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# def tester():
-#     contents = models.Content.objects.all()
-#     counter = 0
-#     print(
-#         contents.get(pk=3555).title_ru, contents.get(pk=3555).sponsors.all()
-#     )
-#     for content in contents:
-#         if len(content.genres.all()) == 0:
-#             print(content.title_ru)
-#         counter += 1
-
-def test():
-    contents = models.Content.objects.all()
-    max_sponsors = 0
-    for content in contents:
-        c = content.genres.all().count()
-        if c > max_sponsors:
-            max_sponsors = c
-    print("MAX", max_sponsors)
