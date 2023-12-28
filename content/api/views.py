@@ -15,6 +15,7 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
     pagination_class = pagination.LimitOffsetPagination
 
     def get_queryset(self):
+        lang = self.request.LANGUAGE_CODE
         age = 18  # self.request.auth.payload.get("age", 18)
         c_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
 
@@ -42,7 +43,7 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         # Filtering by title
         document = base_document.filter(
             dsl_Q({
-                "match": {"title_ru.medium_ngram": {"query": content.title_ru, "fuzziness": "0"}}
+                "match": {f"title_{lang}.strict_edge": {"query": content.title_ru, "fuzziness": "0"}}
             })
         )
         result = []
