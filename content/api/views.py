@@ -18,7 +18,7 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         lang = self.request.LANGUAGE_CODE
         age = 18  # self.request.auth.payload.get("age", 18)
         c_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
-
+        # Title -> Collections -> Sponsors -> Actors ->
         content = get_object_or_404(
             models.Content,
             pk=self.kwargs["content_id"], age_restrictions__lte=age, allowed_countries__in=(c_code, "ALL")
@@ -50,6 +50,8 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         for x in document:
             result.append(x.id)
         result.sort(reverse=True)
+        # Filtering by collections
+        # TODO
         # Filtering by sponsors
         if content.sponsors.exists():
             query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
@@ -62,6 +64,8 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             for x in document:
                 if x not in result:
                     result.append(x.id)
+        # Filtering by actors
+        # TODO
         # Filtering by genres
         if content.genres.exists():
             if len(result) < 30:
