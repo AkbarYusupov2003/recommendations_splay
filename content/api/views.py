@@ -52,7 +52,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         # Filtering by sponsors
         if content.sponsors.exists():
             query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
-            print("QUERY1", query)
             document = base_document.query({
                 "query_string": {
                     "query": f"sponsors.id:({query})",
@@ -66,7 +65,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         if content.genres.exists():
             if len(result) < 30:
                 query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True))) + "^1"
-                print("QUERY2", query)
                 document = base_document.query({
                     "query_string": {
                         "query": f"genres.id:({query})",
@@ -92,16 +90,3 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             return self.get_paginated_response(res.data)
 
         return response.Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-def test():
-    content = models.Content.objects.get(pk=1208)
-    another_content = models.Content.objects.get(pk=7632)
-    content_genres = models.ContentGenre.objects.filter(pk__in=[3345, 3346, 3347]) # .filter(content=content)
-    print(content_genres)
-    # <QuerySet [<ContentGenre: ContentGenre object (3345)>, <ContentGenre: ContentGenre object (3346)>, <ContentGenre: ContentGenre object (3347)>]>
-
-    for x in content_genres:
-        x.content = content
-        # x.content = another_content
-        x.save()

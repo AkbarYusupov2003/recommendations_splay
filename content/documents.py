@@ -76,13 +76,11 @@ class ContentDocument(Document):
     # -------------------------------------------------------------------------------------------
 
     def get_queryset(self):
-        print("qs")
         return super().get_queryset().filter(draft=False).select_related(
             "category"
         ).prefetch_related("allowed_countries")
 
     def get_indexing_queryset(self):
-        print("indexing qs")
         qs = self.get_queryset()
         res = []
         for content in qs:
@@ -119,9 +117,9 @@ class ContentDocument(Document):
     @classmethod
     def generate_id(cls, object_instance):
         try:
-            return object_instance.get("pk")
-        except:
             return object_instance.pk
+        except:
+            return object_instance.get("pk")
 
     class Index:
         name = "contents"

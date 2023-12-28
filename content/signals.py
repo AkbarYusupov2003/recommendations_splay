@@ -7,7 +7,6 @@ from content import utils
 
 @receiver(post_save)
 def update_document(sender, **kwargs):
-    print("UPDATE DOCUMENT")
     app_label = sender._meta.app_label
     model_name = sender._meta.model_name
     instance = kwargs['instance']
@@ -18,7 +17,6 @@ def update_document(sender, **kwargs):
                     registry.delete_related(instance)
                     registry.delete(instance)
                 else:
-                    print("UPDATE", instance)
                     instance.title_uz = utils.remove_quotes(instance.title_uz)
                     instance.title_ru = utils.remove_quotes(instance.title_ru)
                     registry.update(instance)
