@@ -23,20 +23,15 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
             models.Content,
             pk=self.kwargs["content_id"], age_restrictions__lte=age, allowed_countries__in=(c_code, "ALL")
         )
-        # document = self.document.search().filter("match", allowed_countries__country_code=c_code)
-        document = self.document.search().filter(
+        base_document = self.document.search().filter(
             Bool(should=[
                 dsl_Q({"match": {"allowed_countries.country_code": c_code}}),
                 dsl_Q({"match": {"allowed_countries.country_code": "ALL"}})
             ])
         )
-        print(document.count())
-        document = document.filter({"range": {"age_restrictions": {"lte": age}}}) # .extra(size=1000)
-        # TODO Strict title check -> add from sponsors -> add from genres
-        # TODO Try to find with current title -> if not found split title by words -> Try to find ->
-
+        base_document = base_document.filter({"range": {"age_restrictions": {"lte": age}}}) # .extra(size=1000)
         # Filtering by title
-        document = document.filter(
+        document = base_document.filter(
             dsl_Q({
                 "match": {"title_ru.strict_edge": {"query": content.title_ru, "fuzziness": "0"}}
             })
@@ -44,38 +39,39 @@ class RecommendationsForDetailAPIView(generics.GenericAPIView):
         result = []
         for x in document:
             result.append(x.id)
-        # Filtering by sponsors
-        query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True)))
-        document = document.query({
-            "query_string": {
-                "query": f"sponsors.id:({query})",
-                "rewrite": "scoring_boolean"
-            }
-        })
-
-        for x in document:
-            if x not in result:
-                result.append(x.id)
-
         result.sort(reverse=True)
-        # Filtering by genres
-        if len(result) < 30:
-            query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True)))
-            document = document.query({
+        # Filtering by sponsors
+        if content.sponsors.exists():
+            query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True)))
+            document = base_document.query({
                 "query_string": {
-                    "query": f"genres.id:({query})",
+                    "query": f"sponsors.id:({query})",
                     "rewrite": "scoring_boolean"
                 }
             })
+
             for x in document:
                 if x not in result:
                     result.append(x.id)
+        # Filtering by genres
+        if content.genres.exists():
+            if len(result) < 30:
+                query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True)))
+                document = base_document.query({
+                    "query_string": {
+                        "query": f"genres.id:({query})",
+                        "rewrite": "scoring_boolean"
+                    }
+                })
+                for x in document:
+                    if x not in result:
+                        result.append(x.id)
         qs = models.Content.objects.filter(pk__in=result).order_by(
             Case(
                 *[When(pk=pk, then=Value(i)) for i, pk in enumerate(result)],
                 output_field=IntegerField()
             ).asc()
-        )
+        ).prefetch_related("sponsors", "genres")
         return qs
 
     def get(self, request, *args, **kwargs):
