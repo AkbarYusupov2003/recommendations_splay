@@ -42,7 +42,7 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         # Filtering by title
         document = base_document.filter(
             dsl_Q({
-                "match": {"title_ru.strict_ngram": {"query": content.title_ru, "fuzziness": "0"}}
+                "match": {"title_ru.medium_ngram": {"query": content.title_ru, "fuzziness": "0"}}
             })
         )
         result = []
@@ -50,7 +50,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             result.append(x.id)
         result.sort(reverse=True)
         # Filtering by sponsors
-        print("r1", result)
         if content.sponsors.exists():
             query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
             document = base_document.query({
@@ -62,7 +61,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             for x in document:
                 if x not in result:
                     result.append(x.id)
-        print("r2", result)
         # Filtering by genres
         if content.genres.exists():
             if len(result) < 30:
@@ -76,7 +74,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
                 for x in document:
                     if x not in result:
                         result.append(x.id)
-        print("r3", result)
         qs = models.Content.objects.filter(pk__in=result).order_by(
             Case(
                 *[When(pk=pk, then=Value(i)) for i, pk in enumerate(result)],
