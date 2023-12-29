@@ -266,7 +266,7 @@ class ContentSearchAPIView(generics.ListAPIView):
         return response.Response(status=400)
 
 
-class DetailRecommendationsAPIView(generics.GenericAPIView):
+class DetailRecommendationsAPIView(generics.ListAPIView):
     document = documents.ContentDocument
     serializer_class = serializers.RecommendationsForDetailSerializer
     pagination_class = pagination.LimitOffsetPagination
@@ -356,10 +356,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         return qs
 
     def get(self, request, *args, **kwargs):
-        if self.request.LANGUAGE_CODE == "uz" or self.request.LANGUAGE_CODE == "ru":
-            queryset = self.get_queryset()
-            results = self.paginate_queryset(queryset)
-            res = self.get_serializer(results, many=True)
-            return self.get_paginated_response(res.data)
-
-        return response.Response(status=status.HTTP_400_BAD_REQUEST)
+        if self.request.LANGUAGE_CODE in ["uz", "ru", "en"]:
+            return super().get(request, *args, **kwargs)
+        return response.Response(status=400)
