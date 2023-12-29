@@ -29,8 +29,8 @@ class ContentSearchAPIView(generics.ListAPIView):
         lang = self.request.LANGUAGE_CODE
         search_query = utils.remove_quotes(self.request.query_params.get("search", "").lower())
 
-        age = 18 # self.request._auth.payload['age']
-        c_code = "UZ" # "#self.request._auth.payload['c_code']
+        age = 18  # self.request._auth.payload['age']
+        c_code = "UZ"  # "#self.request._auth.payload['c_code']
 
         qs = models.Content.objects.filter(
             allowed_countries__in=(c_code, "ALL"),
@@ -113,7 +113,7 @@ class ContentSearchAPIView(generics.ListAPIView):
                     output_field=IntegerField()
                 ).asc()
             )
-            if ordering in ("rating", "-rating", "date_created", "-date_created"):
+            if ordering in ("rating", "-rating", "-year", "year", "is_new", "-is_new", "date_created", "-date_created"):
                 qs = qs.order_by(ordering)
             return qs
 
@@ -126,49 +126,50 @@ class ContentSearchAPIView(generics.ListAPIView):
                 ).asc()
             )
             qs = qs.filter(
-                Q(title_ru__icontains=search_query) | Q(title_uz__icontains=search_query) | Q(title_en__icontains=search_query)
+                Q(title_ru__icontains=search_query) | Q(title_uz__icontains=search_query) | Q(
+                    title_en__icontains=search_query)
             )
-            if ordering in ("rating", "-rating", "date_created", "-date_created"):
+            if ordering in ("rating", "-rating", "-year", "year", "is_new", "-is_new", "date_created", "-date_created"):
                 qs = qs.order_by(ordering)
             return qs
 
         # START SEARCH
+        search_query = [search_query]
         search_again = True
         wrong_cyrillic = True
         to_cyrillic = True
 
+        result = []
         while search_again:
-            result = []
-
-            if len(list(search_query.split())) > 1:
+            if len(list(search_query[-1].split())) > 1:
                 response = document.query(
-                    dsl_Q({"match": {f"title_ru.multiple_words_ngram": {"query": search_query, "fuzziness": "0"}}}) |
-                    dsl_Q({"match": {f"title_uz.multiple_words_ngram": {"query": search_query, "fuzziness": "0"}}})
+                    dsl_Q({"match": {f"title_ru.multiple_words_ngram": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                    dsl_Q({"match": {f"title_uz.multiple_words_ngram": {"query": search_query[-1], "fuzziness": "0"}}})
                 )
-                result = [x.id for x in response]
+                for x in response:
+                    if not (x.id in result):
+                        result.append(x.id)
                 response = document.query(
-                    dsl_Q({"match": {f"title_ru.multiple_words_ngram": {"query": search_query.replace(" ", "-"), "fuzziness": "0"}}}) |
-                    dsl_Q({"match": {f"title_uz.multiple_words_ngram": {"query": search_query.replace(" ", "-"), "fuzziness": "0"}}})
+                    dsl_Q({"match": {f"title_ru.multiple_words_ngram": {"query": search_query[-1].replace(" ", "-"), "fuzziness": "0"}}}) |
+                    dsl_Q({"match": {f"title_uz.multiple_words_ngram": {"query": search_query[-1].replace(" ", "-"), "fuzziness": "0"}}})
                 )
                 for x in response:
                     if not (x.id in result):
                         result.append(x.id)
 
             response = document.query(
-                dsl_Q({"match": {f"title_ru.strict_edge": {"query": search_query, "fuzziness": "0"}}}) |
-                dsl_Q({"match": {f"title_uz.strict_edge": {"query": search_query, "fuzziness": "0"}}})
+                dsl_Q({"match": {f"title_ru.strict_edge": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                dsl_Q({"match": {f"title_uz.strict_edge": {"query": search_query[-1], "fuzziness": "0"}}})
             )
-
             for x in response:
                 if not (x.id in result):
                     result.append(x.id)
-
-            counter = response.count()
+            counter = len(result)
 
             if counter < 100:
                 helper_response = document.query(
-                    dsl_Q({"match": {f"title_ru.medium_edge": {"query": search_query, "fuzziness": "0"}}}) |
-                    dsl_Q({"match": {f"title_uz.medium_edge": {"query": search_query, "fuzziness": "0"}}})
+                    dsl_Q({"match": {f"title_ru.medium_edge": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                    dsl_Q({"match": {f"title_uz.medium_edge": {"query": search_query[-1], "fuzziness": "0"}}})
                 )
                 for x in helper_response:
                     if not (x.id in result):
@@ -177,8 +178,8 @@ class ContentSearchAPIView(generics.ListAPIView):
 
                 if counter < 100:
                     helper_response = document.query(
-                        dsl_Q({"match": {f"title_ru.strict_ngram": {"query": search_query, "fuzziness": "0"}}}) |
-                        dsl_Q({"match": {f"title_uz.strict_ngram": {"query": search_query, "fuzziness": "0"}}})
+                        dsl_Q({"match": {f"title_ru.strict_ngram": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                        dsl_Q({"match": {f"title_uz.strict_ngram": {"query": search_query[-1], "fuzziness": "0"}}})
                     )
                     for x in helper_response:
                         if not (x.id in result):
@@ -187,8 +188,8 @@ class ContentSearchAPIView(generics.ListAPIView):
 
                     if counter < 100 and counter != 0:
                         helper_response = document.query(
-                            dsl_Q({"match": {f"title_ru.medium_ngram": {"query": search_query, "fuzziness": "0"}}}) |
-                            dsl_Q({"match": {f"title_uz.medium_ngram": {"query": search_query, "fuzziness": "0"}}})
+                            dsl_Q({"match": {f"title_ru.medium_ngram": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                            dsl_Q({"match": {f"title_uz.medium_ngram": {"query": search_query[-1], "fuzziness": "0"}}})
                         )
                         for x in helper_response:
                             if not (x.id in result):
@@ -197,8 +198,8 @@ class ContentSearchAPIView(generics.ListAPIView):
 
                     if counter == 0:
                         helper_response = document.query(
-                            dsl_Q({"match": {f"title_ru.soft_edge": {"query": search_query, "fuzziness": "0"}}}) |
-                            dsl_Q({"match": {f"title_uz.soft_edge": {"query": search_query, "fuzziness": "0"}}})
+                            dsl_Q({"match": {f"title_ru.soft_edge": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                            dsl_Q({"match": {f"title_uz.soft_edge": {"query": search_query[-1], "fuzziness": "0"}}})
                         )
                         for x in helper_response:
                             if not (x.id in result):
@@ -207,8 +208,8 @@ class ContentSearchAPIView(generics.ListAPIView):
 
                     if counter == 0:
                         helper_response = document.query(
-                            dsl_Q({"match": {f"title_ru.soft_edge": {"query": search_query, "fuzziness": "1"}}}) |
-                            dsl_Q({"match": {f"title_uz.soft_edge": {"query": search_query, "fuzziness": "1"}}})
+                            dsl_Q({"match": {f"title_ru.soft_edge": {"query": search_query[-1], "fuzziness": "1"}}}) |
+                            dsl_Q({"match": {f"title_uz.soft_edge": {"query": search_query[-1], "fuzziness": "1"}}})
                         )
                         for x in helper_response:
                             if not (x.id in result):
@@ -217,33 +218,36 @@ class ContentSearchAPIView(generics.ListAPIView):
 
                     if counter == 0:
                         helper_response = document.query(
-                            dsl_Q({"match": {f"title_ru.very_soft_edge": {"query": search_query, "fuzziness": "0"}}}) |
-                            dsl_Q({"match": {f"title_uz.very_soft_edge": {"query": search_query, "fuzziness": "0"}}})
+                            dsl_Q({"match": {
+                                f"title_ru.very_soft_edge": {"query": search_query[-1], "fuzziness": "0"}}}) |
+                            dsl_Q(
+                                {"match": {f"title_uz.very_soft_edge": {"query": search_query[-1], "fuzziness": "0"}}})
                         )
                         for x in helper_response:
                             if not (x.id in result):
                                 result.append(x.id)
                         counter = len(result)
 
-                    if counter == 0:
-                        if wrong_cyrillic:
-                            translated = utils.wrong_cyrillic_translate(search_query)
-                            if search_query == translated:
-                                search_again = False
-                                wrong_cyrillic = False
-                            else:
-                                search_query = translated
-                                search_again = True
-                        elif to_cyrillic:
-                            translated = utils.to_cyrillic_translate(search_query)
-                            if search_query == translated:
-                                search_again = False
-                                to_cyrillic = False
-                            else:
-                                search_query = translated
-                                search_again = True
+                    if counter == 0 and wrong_cyrillic:
+                        translated = utils.wrong_cyrillic_translate(search_query[0])
+                        if search_query[0] == translated:
+                            search_again = False
+                        else:
+                            search_query.append(translated)
+                            search_again = True
+                        wrong_cyrillic = False
                     else:
+                        wrong_cyrillic = False
                         search_again = False
+
+                    if (not search_again) and to_cyrillic:
+                        translated = utils.to_cyrillic_translate(search_query[0])
+                        if search_query[0] == translated:
+                            search_again = False
+                        else:
+                            search_query.append(translated)
+                            search_again = True
+                        to_cyrillic = False
 
             if not search_again:
                 qs = qs.filter(pk__in=result).order_by(
@@ -252,7 +256,7 @@ class ContentSearchAPIView(generics.ListAPIView):
                         output_field=IntegerField()
                     ).asc()
                 )
-                if ordering in ("rating", "-rating", "date_created", "-date_created"):
+                if ordering in ("rating", "-rating", "-year", "year", "is_new", "-is_new", "date_created", "-date_created"):
                     qs = qs.order_by(ordering)
                 return qs
 

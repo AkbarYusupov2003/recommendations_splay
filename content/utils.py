@@ -44,6 +44,7 @@ def wrong_cyrillic_translate(s1):
 
 def to_cyrillic_translate(s1):
     translation = dict()
+    translation[ord("c")] = "к"
     translation[ord("a")] = "а"
     translation[ord("b")] = "б"
     translation[ord("d")] = "д"
@@ -69,10 +70,10 @@ def to_cyrillic_translate(s1):
     translation[ord("u")] = "у"
     translation[ord("v")] = "в"
     translation[ord("x")] = "х"
-    translation[ord("y")] = "у"
+    translation[ord("y")] = "й"
     translation[ord("z")] = "з"
 
-    s1 = s1.replace("sh", "ш").replace("ch", "ч")
+    s1 = s1.replace("sh", "ш").replace("ya", "я").replace("ch", "ч")
 
     return s1.translate(translation)
 
