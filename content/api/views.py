@@ -295,54 +295,69 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             ])
         ).extra(size=50)
         # Filtering by title
-        document = base_document.filter(
-            dsl_Q({
-                "match": {f"title_{lang}.strict_edge": {"query": content.title_ru, "fuzziness": "0"}}
-            })
-        )
+
+        # document = base_document.filter(
+        #     dsl_Q({
+        #         "match": {f"title_{lang}.strict_edge": {"query": content.title_ru, "fuzziness": "0"}}
+        #     })
+        # )
         result = []
-        for x in document:
-            result.append(x.id)
-        result.sort(reverse=True)
+        # for x in document:
+        #     result.append(x.id)
+        # result.sort(reverse=True)
+
         # Filtering by collections
-        collection_pks = list(content.collection.all().values_list("collection_content", flat=True).distinct())
-        recommended = models.ContentCollectionContent.objects.filter(
-            collection_content__in=collection_pks
-        ).values_list("content", flat=True).distinct()[:50-len(result)]
-        print("RECS", recommended)
-        result.extend(recommended)
+
+        # collection_pks = list(content.collection.all().values_list("collection_content", flat=True).distinct())
+        # recommended = models.ContentCollectionContent.objects.filter(
+        #     collection_content__in=collection_pks
+        # ).values_list("content", flat=True).distinct()[:50-len(result)]
+        # result.extend(recommended)
+
         # Filtering by sponsors
-        if content.sponsors.exists():
-            query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
+
+        # if content.sponsors.exists():
+        #     query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
+        #     document = base_document.query({
+        #         "query_string": {
+        #             "query": f"sponsors.id:({query})",
+        #             "rewrite": "scoring_boolean"
+        #         }
+        #     })
+        #     for x in document:
+        #         if x not in result:
+        #             result.append(x.id)
+
+        # Filtering by actors
+        # TODO get list of actors
+        if content.actors.exists():
+            #actors = content.actors.all().values_list("pk", flat=True)
+            query = "^1 ".join(str(x) for x in list(content.actors.all().values_list("pk", flat=True))) + "^1"
             document = base_document.query({
                 "query_string": {
-                    "query": f"sponsors.id:({query})",
+                    "query": f"actors.id:({query})",
                     "rewrite": "scoring_boolean"
                 }
             })
+            print("ACTORS", document.count())
             for x in document:
                 if x not in result:
                     result.append(x.id)
-        # Filtering by actors
-        # TODO get list of actors
-        # if content.actors.exists():
-        #     actors = content.actors.all()
-        #     print("actors", actors)
-
-
         # Filtering by genres
-        if content.genres.exists():
-            if len(result) < 30:
-                query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True))) + "^1"
-                document = base_document.query({
-                    "query_string": {
-                        "query": f"genres.id:({query})",
-                        "rewrite": "scoring_boolean"
-                    }
-                }).extra(size=30)
-                for x in document:
-                    if x not in result:
-                        result.append(x.id)
+
+        # if len(result) < 30:
+        #     if content.genres.exists():
+        #         query = "^1 ".join(str(x) for x in list(content.genres.all().values_list("pk", flat=True))) + "^1"
+        #         document = base_document.query({
+        #             "query_string": {
+        #                 "query": f"genres.id:({query})",
+        #                 "rewrite": "scoring_boolean"
+        #             }
+        #         }).extra(size=30)
+        #         for x in document:
+        #             if x not in result:
+        #                 result.append(x.id)
+
         qs = models.Content.objects.filter(pk__in=result).order_by(
             Case(
                 *[When(pk=pk, then=Value(i)) for i, pk in enumerate(result)],
