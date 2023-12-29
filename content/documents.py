@@ -81,6 +81,15 @@ class ContentDocument(Document):
         },
         multi=True
     )
+    #
+    actors = fields.ObjectField(
+        attr="actors",
+        properties={
+            "id": fields.IntegerField(),
+        },
+        multi=True
+    )
+
     # -------------------------------------------------------------------------------------------
 
     def get_queryset(self):
@@ -114,6 +123,11 @@ class ContentDocument(Document):
             for country in content.country.all():
                 countries.append({"id": country.pk})
             obj["country"] = countries
+
+            actors = []
+            for actor in content.actors.all():
+                actors.append({"id": actor.pk})
+            obj["actors"] = actors
 
             obj["category"] = {"id": content.category.pk}
             obj["pk"] = content.pk

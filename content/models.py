@@ -268,18 +268,18 @@ class Content(models.Model):
     country = models.ManyToManyField(
         Country, verbose_name="Страна", related_name='country', through="ContentCountry", blank=True
     )
-    # actors = models.ManyToManyField(
-    #     Person, verbose_name="В ролях", related_name='actors', through="ContentActor", blank=True
-    # )
-    # scenario = models.ManyToManyField(
-    #     Person, verbose_name="Сценарист", related_name='scenario', through="ContentScenario", blank=True
-    # )
-    # producer = models.ManyToManyField(
-    #     Person, verbose_name="Продюсер", related_name='producer', through="ContentProducer", blank=True
-    # )
-    # director = models.ManyToManyField(
-    #     Person, verbose_name="Режиссер", related_name='director', through="ContentDirector", blank=True
-    # )
+    actors = models.ManyToManyField(
+        Person, verbose_name="В ролях", related_name='actors', through="ContentActor", blank=True
+    )
+    scenario = models.ManyToManyField(
+        Person, verbose_name="Сценарист", related_name='scenario', through="ContentScenario", blank=True
+    )
+    producer = models.ManyToManyField(
+        Person, verbose_name="Продюсер", related_name='producer', through="ContentProducer", blank=True
+    )
+    director = models.ManyToManyField(
+        Person, verbose_name="Режиссер", related_name='director', through="ContentDirector", blank=True
+    )
     genres = models.ManyToManyField(
         Genre, verbose_name="Жанры", related_name='genres', through="ContentGenre", blank=True
     )
@@ -387,6 +387,60 @@ class ContentCountry(models.Model):
     class Meta:
         ordering = 'ordering',
         db_table = "content_content_country"
+
+
+# Actor, Director, Producer, Scenario
+class ContentActor(models.Model):
+    content = models.ForeignKey(Content, related_name='content_actors', on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    ordering = models.PositiveSmallIntegerField(default=10)
+
+    class Meta:
+        ordering = 'ordering',
+        db_table = "content_content_actors"
+        unique_together = ['content', 'person']
+        verbose_name = "Актер"
+        verbose_name_plural = "Актеры"
+
+
+class ContentDirector(models.Model):
+    content = models.ForeignKey(Content, related_name='content_directors', on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    ordering = models.PositiveSmallIntegerField(default=10)
+
+    class Meta:
+        ordering = 'ordering',
+        db_table = "content_content_director"
+        unique_together = ['content', 'person']
+        verbose_name = "Директор"
+        verbose_name_plural = "Директоры"
+
+
+class ContentProducer(models.Model):
+    content = models.ForeignKey(Content, related_name='content_producers', on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    ordering = models.PositiveSmallIntegerField(default=10)
+
+    class Meta:
+        ordering = 'ordering',
+        db_table = "content_content_producer"
+        unique_together = ['content', 'person']
+        verbose_name = "Продюсер"
+        verbose_name_plural = "Продюсеры"
+
+
+class ContentScenario(models.Model):
+    content = models.ForeignKey(Content, related_name='content_scenarios', on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    ordering = models.PositiveSmallIntegerField(default=10)
+
+    class Meta:
+        ordering = 'ordering',
+        db_table = "content_content_scenario"
+        unique_together = ['content', 'person']
+        verbose_name = "Сценарист"
+        verbose_name_plural = "Сценаристы"
+# -----------------------------------
 
 
 class ContentCollection(models.Model):

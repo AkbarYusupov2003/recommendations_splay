@@ -325,7 +325,9 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
                     result.append(x.id)
         # Filtering by actors
         # TODO get list of actors
-
+        # if content.actors.exists():
+        #     actors = content.actors.all()
+        #     print("actors", actors)
 
 
         # Filtering by genres

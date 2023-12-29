@@ -56,6 +56,11 @@ admin.site.register(models.Person)
 admin.site.register(models.ContentSponsor)
 admin.site.register(models.ContentGenre)
 admin.site.register(models.ContentCountry)
+#
+admin.site.register(models.ContentActor)
+admin.site.register(models.ContentDirector)
+admin.site.register(models.ContentProducer)
+admin.site.register(models.ContentScenario)
 
 
 @admin.register(models.ContentCollection)
