@@ -56,3 +56,17 @@ admin.site.register(models.Person)
 admin.site.register(models.ContentSponsor)
 admin.site.register(models.ContentGenre)
 admin.site.register(models.ContentCountry)
+
+
+@admin.register(models.ContentCollection)
+class ContentCollectionAdmin(admin.ModelAdmin):
+    list_display = ("title_ru", "is_recommended", "is_kids")
+    list_filter = ("is_recommended", "is_kids")
+
+
+@admin.register(models.ContentCollectionContent)
+class ContentCollectionContentAdmin(admin.ModelAdmin):
+    list_display = ("collection_content", "content")
+    list_filter = ("collection_content",)
+    search_fields = ("content__title_ru", )
+

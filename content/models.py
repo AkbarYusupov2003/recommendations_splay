@@ -387,3 +387,47 @@ class ContentCountry(models.Model):
     class Meta:
         ordering = 'ordering',
         db_table = "content_content_country"
+
+
+class ContentCollection(models.Model):
+    for iso in lang:
+        locals()[f'title_{iso}'] = models.CharField(f"Название коллекции на [{lang[iso]}]", max_length=200)
+
+    is_recommended = models.BooleanField("Рекомендация", default=False)
+    is_kids = models.BooleanField("Детская коллекция", default=False)
+    ordering = models.PositiveSmallIntegerField("Позиция в списке", default=10, blank=True, null=True)
+    picture = StdImageField(
+        'Картинка',
+        max_length=250,
+        upload_to='collection_pictures/',
+        help_text="Рекомендуемый размер 1x1",
+        variations={
+            'large': (1080, 1080),
+            'medium': (768, 768),
+            'small': (200, 200),
+            'thumb': (75, 75)
+        },
+        null=True,
+    )
+
+    def __str__(self):
+        return self.title_ru
+
+    class Meta:
+        ordering = 'ordering',
+        verbose_name = 'Коллекция'
+        verbose_name_plural = 'Коллекции'
+
+
+class ContentCollectionContent(models.Model):
+    content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='collection')
+    collection_content = models.ForeignKey(ContentCollection, on_delete=models.CASCADE, related_name='content_collection')
+    ordering = models.PositiveSmallIntegerField("Позиция в списке", default=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.collection_content.title_ru}: {self.content.title_ru}"
+
+    class Meta:
+        ordering = "ordering",
+        verbose_name = "Связи Коллекций"
+        verbose_name_plural = "Связи Коллекций"

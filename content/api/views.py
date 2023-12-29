@@ -275,11 +275,8 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         lang = self.request.LANGUAGE_CODE
         age = 18  # self.request.auth.payload.get("age", 18)
         c_code = "UZ"  # self.request.auth.payload.get("c_code", "ALL")
-        # Title -> Collections -> Sponsors -> Actors -> Genres
-        content = get_object_or_404(
-            models.Content,
-            pk=self.kwargs["content_id"], age_restrictions__lte=age, allowed_countries__in=(c_code, "ALL")
-        )
+        # TODO Title -> Collections -> Sponsors -> Actors -> Genres
+        content = get_object_or_404(models.Content, pk=self.kwargs["content_id"], draft=False)
         base_document = self.document.search().filter(
             Bool(should=[
                 dsl_Q({"match": {"allowed_countries.country_code": c_code}}),
@@ -308,13 +305,12 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
             result.append(x.id)
         result.sort(reverse=True)
         # Filtering by collections
-        # TODO
-        # document = base_document.filter(
-        #     dsl_Q({
-        #
-        #     })
-        # )
-
+        collection_pks = list(content.collection.all().values_list("collection_content", flat=True).distinct())
+        recommended = models.ContentCollectionContent.objects.filter(
+            collection_content__in=collection_pks
+        ).values_list("content", flat=True).distinct()[:50-len(result)]
+        print("RECS", recommended)
+        result.extend(recommended)
         # Filtering by sponsors
         if content.sponsors.exists():
             query = "^1 ".join(str(x) for x in list(content.sponsors.all().values_list("pk", flat=True))) + "^1"
@@ -328,7 +324,10 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
                 if x not in result:
                     result.append(x.id)
         # Filtering by actors
-        # TODO
+        # TODO get list of actors
+
+
+
         # Filtering by genres
         if content.genres.exists():
             if len(result) < 30:
