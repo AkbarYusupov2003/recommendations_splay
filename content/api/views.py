@@ -266,6 +266,19 @@ class ContentSearchAPIView(generics.ListAPIView):
         return response.Response(status=400)
 
 
+def test():
+    person = models.Person.objects.get(name_ru="Джеки Чан")
+    content_actors = models.ContentActor.objects.filter(person=person)
+    count = 0
+    print("len: ", len(content_actors))
+    for x in content_actors:
+        print(x.content.pk, x.content.title_ru, x.content.draft, x.content.category)
+        if x.content.draft:
+            count += 1
+
+    print("count: ", count)
+
+
 class DetailRecommendationsAPIView(generics.GenericAPIView):
     document = documents.ContentDocument
     serializer_class = serializers.RecommendationsForDetailSerializer
@@ -293,7 +306,7 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
                 dsl_Q({"match": {"id": content.pk}}),
                 dsl_Q({"range": {"age_restrictions": {"gt": age}}})
             ])
-        ).extra(size=50)
+        ).extra(size=5000)
         # Filtering by title
 
         # document = base_document.filter(
@@ -331,7 +344,6 @@ class DetailRecommendationsAPIView(generics.GenericAPIView):
         # Filtering by actors
         # TODO get list of actors
         if content.actors.exists():
-            #actors = content.actors.all().values_list("pk", flat=True)
             query = "^1 ".join(str(x) for x in list(content.actors.all().values_list("pk", flat=True))) + "^1"
             document = base_document.query({
                 "query_string": {
