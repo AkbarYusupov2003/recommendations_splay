@@ -8,3 +8,6 @@ pytils==0.4.1
 
 django-debug-toolbar==4.2.0
 psycopg2-binary==2.9.9
+
+requests==2.31.0
+lxml==5.0.0

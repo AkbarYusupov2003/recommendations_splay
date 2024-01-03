@@ -81,3 +81,40 @@ def to_cyrillic_translate(s1):
 def remove_quotes(s1):
     translation_table = str.maketrans("", "", "‘’'`")
     return s1.translate(translation_table)
+
+
+# -----------------------------------------------------------------------
+import requests
+
+
+kinopoisk_token = "DG0DEXV-EDW43B2-G3N8J6K-BA8ECZ6"
+headers = {"X-API-KEY": kinopoisk_token}
+
+
+def kinopoisk_by_id():
+    url = "https://api.kinopoisk.dev/v1.4/movie/1" # 5304403
+
+    response = requests.get(headers=headers, url=url)
+    result = response.json()
+
+    persons = result["persons"]
+
+    # for person in persons:
+
+    print("result: ", result["persons"])
+
+
+def kinopoisk_filter():
+    url = "https://api.kinopoisk.dev/v1.4/movie?year=2023&genres.name=криминал"
+
+    response = requests.get(headers=headers, url=url)
+    result = response.json()["docs"]
+    print("result: ", result[0]) # .get("description")
+
+
+def kinopoisk_by_slug():
+    url = "https://api.kinopoisk.dev/v1.4/list?page=1&limit=10&slug=honourable_mentions_XXI"
+
+    response = requests.get(headers=headers, url=url)
+    result = response.json()
+    print("result: ", result)

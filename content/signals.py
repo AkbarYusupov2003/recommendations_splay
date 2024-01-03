@@ -7,6 +7,7 @@ from content import utils
 
 @receiver(post_save)
 def update_document(sender, **kwargs):
+    print("UPDATE DOCUMENT")
     app_label = sender._meta.app_label
     model_name = sender._meta.model_name
     instance = kwargs['instance']
