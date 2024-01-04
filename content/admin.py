@@ -1,48 +1,26 @@
+import re
 import requests
-import shutil
-from django.contrib import admin
 from lxml.html import fromstring
+from django.contrib import admin
 
 from content import models
 
 
-def get_page_with_captcha(self, page_text):
-    html = fromstring(page_text)
-    # Get captcha image URL
-    img = html.xpath('//div[@class="captcha__image"]//img')
-    captcha_url = img[0].get('src')
-    # Get captcha key
-    input_captcha_key = html.xpath('//input[@class="form__key"]')
-    captcha_key = input_captcha_key[0].get('value')
-    # Get return path
-    input_retpath = html.xpath('//input[@class="form__retpath"]')
-    retpath = input_retpath[0].get('value')
-
-    print(f"Captch URL = {captcha_url}, key = {captcha_key}")
-
-    r = requests.get(captcha_url, stream=True)
-    if r.status_code != 200:
-        raise Exception('Could not download captcha image')
-    captcha_filename = self.cache.get_cached_filename(captcha_url)
-    with open(captcha_filename, 'wb') as f:
-        r.raw.decode_content = True
-        shutil.copyfileobj(r.raw, f)
-
-    solver = CaptchaSolver(captcha_filename)
-    task_id = solver.CreateTask()
-    solution = solver.GetTaskResult(task_id)
-    if not solution:
-        print("Could not solve captcha")
-        return None
-
-    params = {'key': captcha_key, 'retpath': retpath, 'rep': solution}
-    r = requests.get('https://www.kinopoisk.ru/checkcaptcha', params=params)
-    # /checkcaptcha example:
-    # https://www.kinopoisk.ru/checkcaptcha?key=<key>&retpath=<retpath>&rep=%D0%BB%D1%8E%D0%BD%D0%B3%D1%81%D1%82%D0%B0%D0%B4
-    if r.status_code == 200:
-        print("CAPTCHA SOLVED")
-
-    return r
+headers = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3",
+    "Connection": "keep-alive",
+    "Cookie": "_yasc=VDySndpJfWuqTW26TlWbjIno7yzLLBZ78SHtuWVyOzuXvIy0gOfxaSSLM9n/gd4FIe5i; i=aG07CboIOI0F1uJCHCPf/cTc3tZ/9cx9/wyWJ83wSV3RJYTiLYgq7YXFK6+oO+PLN4QTBYTpl0k8X+4R9DZGILaGk8M=; yandexuid=2869332001704254694; _ym_uid=1703855575299104992; _ym_d=1704350533; yandex_login=; mda2_beacon=1704350284916; cycada=VXT/o0iKICizsHhPlY1LNSxORIvNO2b0/oq+nscZWlg=; my_perpages=%5B%5D; mobile=no; mda_exp_enabled=1; no-re-reg-required=1; session_key=eyJzZWNyZXQiOiJUNnF0c21aUlRwNnhYQUNUWXNSbUlaMFIiLCJfZXhwaXJlIjoxNzA0MzU5NDM3NDc4LCJ…AvrQYtL_0j7OnYMCg.oKGB7qsQzcVG_qaNpaV25kcr789J-rJn0fa9YkMjiNI; ys=c_chck.3939831260; sso_status=sso.passport.yandex.ru:synchronized; desktop_session_key=0d44d88f8dc39a4ab0623917e4ba139ad507e2f323f0e811d18352adf0a1c928b43bce39bbd7f24e7ec01ed54b5fae4ca1109808c4301c42f7fd90796bbdb474b2d26f012ca3b6ff6a5b896cd67235630cacf64d4451429388c6d54a61c438fd; desktop_session_key.sig=eiPOBomguIqxIwHt-V2_a3pAsvE; gdpr=0; _ym_isad=2; _ym_visorc=b; PHPSESSID=25503831e464283ada86cebd7161a74b; user_country=uz; yandex_gid=10335",
+    "Host": "www.kinopoisk.ru",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "1",
+    "TE": "trailers",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+}
 
 
 @admin.register(models.Content)
@@ -54,16 +32,25 @@ class ContentAdmin(admin.ModelAdmin):
     search_fields = ("title_ru", "title_uz")
 
     def save_model(self, request, obj, form, change):
-        print("SAVE MODEL", request)
         # get persons and ratings from kinopoisk
-        url = f"https://www.kinopoisk.ru/series/5304403/" # {obj.title_ru}
-        response = requests.get(url=url)
-        print("url: ", response.url)
-        if response.url == url:
-            pass
-
-        # print("json: ", r.json())
+        api_key = "DG0DEXV-EDW43B2-G3N8J6K-BA8ECZ6"
+        url = f"https://api.kinopoisk.dev/v1.4/movie/search?query={obj.title_ru}"
+        response = request.get(url, {"X-API-KEY": api_key})
+        # TODO
         return super().save_model(request, obj, form, change)
+
+    # def save_model(self, request, obj, form, change):
+    #     # get persons and ratings from kinopoisk
+    #     url = f"https://www.kinopoisk.ru/series/5304403/"
+    #     response = requests.get(url=url)
+    #
+    #     if "sso.passport.yandex" in response.url:
+    #         val = re.findall(r'var it =\s*(.*?);', response.text, re.DOTALL | re.MULTILINE)[0]
+    #         val = re.findall(r'"retpath":\s*(.*?)', val, re.DOTALL | re.MULTILINE)[0].replace("\\u002F", "/")
+    #     elif "showcaptcha" in response.url:
+    #         # Каптча 1. С галочкой 2. С изображением и аудио
+    #         pass
+    #     return super().save_model(request, obj, form, change)
 
     def get_genres(self, object):
         res = []
@@ -134,4 +121,3 @@ class ContentCollectionContentAdmin(admin.ModelAdmin):
     list_display = ("collection_content", "content")
     list_filter = ("collection_content",)
     search_fields = ("content__title_ru", )
-
