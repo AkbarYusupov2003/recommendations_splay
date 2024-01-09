@@ -30,7 +30,7 @@ class ContentAdmin(admin.ModelAdmin):
             response = requests.get(url, headers=headers)
             status = response.status_code
             if status == 200:
-                result = response.json(
+                result = response.json()
 
                 rating_imdb = result["rating"]["imdb"]
                 if rating_imdb:
