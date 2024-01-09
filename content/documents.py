@@ -89,7 +89,6 @@ class ContentDocument(Document):
         },
         multi=True
     )
-
     # -------------------------------------------------------------------------------------------
 
     def get_queryset(self):

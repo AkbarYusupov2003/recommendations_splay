@@ -237,8 +237,8 @@ class Person(models.Model):
 
     class Meta:
         ordering = ['ordering']
-        verbose_name = "Участник"
-        verbose_name_plural = "Участники"
+        verbose_name = "Человек"
+        verbose_name_plural = "Люди"
         db_table = "content_person"
 
 
@@ -328,6 +328,7 @@ class Content(models.Model):
 
     rating = models.FloatField("Рэйтинг", default=10)
     rating_count = models.PositiveIntegerField("Количество оценок", null=True, blank=True, default=0)
+    # imdb_rating = models.FloatField("IMDB Рэйтинг", null=True, blank=True)
 
     is_new = models.BooleanField("Премьера", default=False)
     is_soon = models.BooleanField("Скоро...", default=False)
@@ -346,6 +347,7 @@ class Content(models.Model):
     allowed_subscriptions = models.ManyToManyField(
         "ContentSubscription", verbose_name='Разрешенные подписки', blank=False
     )
+    # kinopoisk_id = models.IntegerField("ID Кинопоиска", null=True, blank=True)
 
     def __str__(self):
         for iso in lang:

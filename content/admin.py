@@ -1,21 +1,13 @@
 import requests
+from bs4 import BeautifulSoup
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from content import models
 
 
 class ContentForm(forms.ModelForm):
     kinopoisk_id = forms.CharField(required=False)
-
-    def save(self, commit=True):
-        print("TRYING TO SAVE")
-        kinopoisk_id = self.cleaned_data.get('kinopoisk_id', None)
-        #del self.cleaned_data["kinopoisk_id"]
-
-        # Do something with extra_field here
-
-        return super().save(commit=commit)
 
 
 @admin.register(models.Content)
@@ -28,13 +20,64 @@ class ContentAdmin(admin.ModelAdmin):
     form = ContentForm
 
     def save_model(self, request, obj, form, change):
-        headers = {"X-API-KEY": "DG0DEXV-EDW43B2-G3N8J6K-BA8ECZ6"}
-        url = f"https://api.kinopoisk.dev/v1.4/movie/search?query={obj.title_ru}"
-        response = requests.get(url, headers=headers)
-        print("response", response.json())
-        # TODO
-        self.message_user(request, "Hsh dfh df")
-        return super().save_model(request, obj, form, change)
+        obj.save()
+        soup = BeautifulSoup(str(form), features="lxml")
+        kinopoisk_input = soup.find("input", id="id_kinopoisk_id")
+        if kinopoisk_input.has_attr("value"): # obj.kinopoisk_id
+            headers = {"X-API-KEY": "DG0DEXV-EDW43B2-G3N8J6K-BA8ECZ6"}
+            kinopoisk_id = kinopoisk_input['value']
+            url = f"https://api.kinopoisk.dev/v1.4/movie/{kinopoisk_id}" # obj.kinopoisk_id
+            response = requests.get(url, headers=headers)
+            status = response.status_code
+            if status == 200:
+                result = response.json(
+
+                rating_imdb = result["rating"]["imdb"]
+                if rating_imdb:
+                    print("imdb: ", rating_imdb)
+                    obj.rating_imdb = rating_imdb
+                    obj.save()
+
+                for res_person in result["persons"]:
+                    exists = models.Person.objects.filter(name_ru__iexact=res_person["name"]).first()
+                    if exists:
+                        person = exists
+                    else:
+                        person = models.Person.objects.create(
+                            name_ru=res_person["name"],
+                        )
+
+                    if res_person["profession"] == "актеры":
+                        models.ContentActor.objects.get_or_create(content=obj, person=person)
+
+                    elif res_person["profession"] == "режиссеры":
+                        models.ContentDirector.objects.get_or_create(content=obj, person=person)
+
+                    elif res_person["profession"] == "продюсеры":
+                        models.ContentProducer.objects.get_or_create(content=obj, person=person)
+
+                    elif res_person["profession"] == "сценаристы":
+                        models.ContentScenario.objects.get_or_create(content=obj, person=person)
+
+                self.message_user(
+                    request,
+                    "Данные из кинопоиска успешно добавлены",
+                    level=messages.SUCCESS
+                )
+            else:
+                errors_dict = {401: "Unauthorized", 403: "Forbidden", 404: "NotFound"}
+                if status in errors_dict.keys():
+                    self.message_user(
+                        request,
+                        f"Произошла ошибка с добавлением данных из кинопоиска. На API сервере: {errors_dict[status]}",
+                        level=messages.ERROR
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        f"Произошла ошибка с добавлением данных из кинопоиска. На API сервере: {status} код",
+                        level=messages.ERROR
+                    )
 
     def get_genres(self, object):
         res = []
@@ -76,7 +119,12 @@ admin.site.register(models.Sponsor)
 
 admin.site.register(models.Country)
 admin.site.register(models.Category)
-admin.site.register(models.Person)
+
+
+@admin.register(models.Person)
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ("name_ru", )
+
 
 admin.site.register(models.ContentSponsor)
 admin.site.register(models.ContentGenre)
